@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${movie.title}">영화 상세정보</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 900px;
+            color: #111;
+        }
+
+        h1, h2 {
+            color: #222;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        .poster img, video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .section {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .review-item {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        .review-content {
+            margin-bottom: 10px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .actions button, .actions a, .section button {
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .actions button:hover, .section button:hover, .actions a:hover {
+            background-color: #555;
+        }
+
+        .danger {
+            background-color: #c00 !important;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        .back a {
+            display: inline-block;
+            text-align: center;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<h1 th:text="${movie.title}">영화 제목</h1>
+
+<div class="section poster" style="text-align:center;">
+    <img th:src="@{${movie.imageUrl}}" alt="포스터" onerror="this.src='/images/placeholder.jpg'" />
+</div>
+
+<div class="section video-container" style="text-align:center;">
+    <video controls>
+        <source th:src="@{${movie.videoUrl}}" type="video/mp4" />
+        브라우저가 video 태그를 지원하지 않습니다.
+    </video>
+</div>
+
+<!-- 🎧 오디오 플레이어 -->
+<div class="section audio-container" th:if="${movie.audioUrl != null}" style="text-align:center;">
+    <h2>🎧 대표 음악</h2>
+    <audio controls>
+        <source th:src="@{${movie.audioUrl}}" type="audio/mpeg" />
+        브라우저가 audio 태그를 지원하지 않습니다.
+    </audio>
+</div>
+
+<div class="section description">
+    <p th:text="${movie.description}">영화 설명</p>
+</div>
+
+<!-- 리뷰 목록 -->
+<div class="section reviews">
+    <h2>리뷰 목록</h2>
+    <div th:each="review : ${reviews}" class="review-item">
+        <div th:id="'view-' + ${review.id}" class="review-content" th:text="${review.content}"></div>
+
+        <form th:id="'edit-form-' + ${review.id}" th:action="@{/reviews/edit}" method="post" style="display:none;">
+            <input type="hidden" name="reviewId" th:value="${review.id}" />
+            <textarea name="content" rows="2" required th:text="${review.content}"></textarea>
+            <div class="actions" style="margin-top: 8px;">
+                <button type="submit">수정 완료</button>
+                <button type="button" th:onclick="'cancelEdit(' + ${review.id} + ')'">취소</button>
+            </div>
+        </form>
+
+        <div class="actions" th:id="'buttons-' + ${review.id}">
+            <form th:action="@{/reviews/like}" method="post">
+                <input type="hidden" name="reviewId" th:value="${review.id}" />
+                <button type="submit">❤️ <span th:text="${review.likeCount}">0</span></button>
+            </form>
+            <form th:if="${session.user?.id == review.author.id}" th:action="@{/reviews/delete}" method="post">
+                <input type="hidden" name="reviewId" th:value="${review.id}" />
+                <button type="submit" class="danger">삭제</button>
+            </form>
+            <button type="button" th:if="${session.user?.id == review.author.id}" th:onclick="'editReview(' + ${review.id} + ')'">수정</button>
+        </div>
+    </div>
+</div>
+
+<!-- 리뷰 작성 -->
+<div class="section review-form">
+    <h2>리뷰 작성</h2>
+    <form th:action="@{/reviews/add}" method="post">
+        <input type="hidden" name="movieId" th:value="${movie.id}" />
+        <textarea name="content" rows="3" placeholder="리뷰를 작성해주세요" required></textarea>
+        <button type="submit">리뷰 등록</button>
+    </form>
+</div>
+
+<div class="back" style="margin-top: 40px;">
+    <a th:href="@{/}">← 홈으로</a>
+</div>
+
+<script>
+    function editReview(id) {
+        document.getElementById('view-' + id).style.display = 'none';
+        document.getElementById('edit-form-' + id).style.display = 'block';
+        document.getElementById('buttons-' + id).style.display = 'none';
+    }
+
+    function cancelEdit(id) {
+        document.getElementById('view-' + id).style.display = 'block';
+        document.getElementById('edit-form-' + id).style.display = 'none';
+        document.getElementById('buttons-' + id).style.display = 'flex';
+    }
+</script>
+
+</body>
+</html>

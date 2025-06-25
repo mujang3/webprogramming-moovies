@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <title>Moovies - Home</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        header { text-align: center; padding: 20px; font-size: 2em; font-weight: bold; }
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 0 20px;
+        }
+        .top-bar button, .top-bar a {
+            font-size: 1em;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .movie {
+            text-align: center;
+        }
+        .movie img {
+            width: 100%;
+            height: auto;
+            background-color: #ccc;
+            aspect-ratio: 2 / 3;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .movie-title {
+            margin-top: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<header>MOOVIES</header>
+
+<div class="top-bar">
+    <form th:action="@{/logout}" method="post">
+        <button type="submit">Logout</button>
+    </form>
+</div>
+
+<div class="grid">
+    <div class="movie" th:each="movie : ${movies}">
+        <a th:href="@{'/movies/' + ${movie.id}}">
+            <img th:src="@{${movie.imageUrl}}" alt="movie image"
+                 onerror="this.src='/images/placeholder.jpg'" />
+            <div class="movie-title" th:text="${movie.title}">movie title</div>
+        </a>
+    </div>
+</div>
+</body>
+</html>
