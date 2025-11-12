@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.0
+    platform: linux/arm64/v8
+    container_name: moovies-mysql
+    restart: always
+    env_file: .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - TZ=${TZ}
+    ports:
+      - "3307:3306"           # (로컬에서 접근 필요할 때만 열림)
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+      - ./mysql_conf.d:/etc/mysql/conf.d
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "--protocol=TCP", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  app:
+    build: .
+    container_name: moovies-app
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_PROFILES_ACTIVE=prod
+      - TZ=${TZ}

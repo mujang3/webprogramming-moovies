@@ -8,14 +8,22 @@ package com.example.moovies.service
 
 import com.example.moovies.model.Movie
 import com.example.moovies.model.Review
+import com.example.moovies.model.ReviewLike
 import com.example.moovies.model.User
+import com.example.moovies.repository.ReviewLikeRepository
 import com.example.moovies.repository.ReviewRepository
+import com.example.moovies.repository.UserRepository
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class ReviewService(
-    private val reviewRepository: ReviewRepository
+    private val reviewRepository: ReviewRepository,
+    private val userRepository: UserRepository,
+    private val reviewLikeRepository: ReviewLikeRepository
 ) {
+
     // 새로운 리뷰 추가
     fun addReview(movie: Movie, content: String, author: User) {
         val review = Review(
@@ -34,16 +42,40 @@ class ReviewService(
         if (review.author.id != user.id) {
             throw RuntimeException("수정 권한이 없습니다.")
         }
+
         review.content = newContent
+        review.updatedAt = LocalDateTime.now()
+
         return reviewRepository.save(review)
     }
 
-    // 리뷰 좋아요 기능 (단순히 좋아요 수 증가)
+    // 리뷰 좋아요 기능: 이미 눌렀으면 취소, 아니면 추가 (토글)
+    @Transactional
     fun likeReview(reviewId: Long, user: User): Review {
         val review = reviewRepository.findById(reviewId)
             .orElseThrow { RuntimeException("리뷰를 찾을 수 없습니다.") }
 
-        review.likeCount += 1
+        val managedUser = userRepository.findById(user.id)
+            .orElseThrow { RuntimeException("사용자를 찾을 수 없습니다.") }
+
+        val existing = reviewLikeRepository.findByReviewAndUser(review, managedUser)
+
+        if (existing != null) {
+            // 이미 좋아요 → 취소
+            reviewLikeRepository.delete(existing)
+            review.likeCount = (review.likeCount - 1).coerceAtLeast(0)
+        } else {
+            // 아직 안 눌렀으면 → 좋아요 추가
+            val like = ReviewLike(
+                review = review,
+                user = managedUser
+            )
+            reviewLikeRepository.save(like)
+            review.likeCount = review.likeCount + 1
+        }
+
+        review.updatedAt = LocalDateTime.now()
+
         return reviewRepository.save(review)
     }
 

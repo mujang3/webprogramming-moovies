@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.0
+    platform: linux/arm64/v8
+    container_name: moovies-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=moovies
+      - TZ=Asia/Seoul
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--protocol=TCP", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  app:
+    build: .
+    container_name: moovies-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      # ??: mysql(????) ? ?? sslMode=DISABLED??
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/moovies?useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true&sslMode=DISABLED&serverTimezone=Asia/Seoul
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_SQL_INIT_MODE=never
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
+      - SPRING_PROFILES_ACTIVE=prod
+      - TZ=Asia/Seoul

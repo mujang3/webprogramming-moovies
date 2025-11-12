@@ -11,19 +11,16 @@ import com.example.moovies.repository.MovieRepository
 import org.springframework.stereotype.Service
 
 @Service
-class MovieService(private val movieRepository: MovieRepository) {
+class MovieService(
+    private val movieRepository: MovieRepository
+) {
 
     // 특정 ID를 가진 영화 한 편을 반환 (없을 경우 예외 발생)
     fun getMovie(id: Long): Movie {
         return movieRepository.findById(id)
-            .orElseThrow { IllegalArgumentException("영화를 찾을 수 없습니다: id=$id") }
+            .orElseThrow { IllegalArgumentException("영화를 찾을 수 없습니다. id=$id") }
     }
 
-    // 영화 전체 목록 조회 - 동일한 기능을 가진 함수가 아래에 중복됨
-    fun getAll(): List<Movie> = movieRepository.findAll()
-
-    // 영화 전체 목록 조회 (명확한 이름 사용)
-    fun getAllMovies(): List<Movie> {
-        return movieRepository.findAll()
-    }
+    // 영화 전체 목록 조회
+    fun getAllMovies(): List<Movie> = movieRepository.findAll()
 }

@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <title>Login</title>
     <style>
-        body { text-align: center; font-family: sans-serif; }
+        body {
+            text-align: center;
+            font-family: sans-serif;
+        }
         .box {
             display: inline-block;
             padding: 30px;
@@ -17,23 +20,12 @@
             padding: 5px;
             width: 200px;
         }
+        /* login / signup 버튼 공통 스타일 */
         button {
             margin: 10px 5px;
             padding: 5px 15px;
-        }
-        .link-button {
-            display: inline-block;
-            margin: 10px 5px;
-            padding: 5px 15px;
-            background-color: #eee;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            text-decoration: none;
-            color: black;
             font-size: 14px;
-        }
-        .link-button:hover {
-            background-color: #ddd;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -52,8 +44,13 @@
         <label>PW</label>
         <input type="password" name="password" required />
         <div>
-            <!-- signup은 링크 형식으로, login은 form submit -->
-            <a th:href="@{/register}" class="link-button">signup</a>
+            <!-- signup: 폼 제출이 아니라 /register 페이지로 이동 -->
+            <button type="button"
+                    th:onclick="|location.href='@{/register}'|">
+                signup
+            </button>
+
+            <!-- login: 폼 전송 -->
             <button type="submit">login</button>
         </div>
     </form>

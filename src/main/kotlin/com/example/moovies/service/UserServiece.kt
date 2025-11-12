@@ -26,6 +26,7 @@ class UserService(
 
     // 회원가입: 비밀번호 암호화 후 저장
     fun register(user: User) {
+        // role, createdAt/updatedAt은 엔티티 기본값 사용
         user.password = passwordEncoder.encode(user.password)
         userRepository.save(user)
     }

@@ -15,12 +15,19 @@ import org.springframework.stereotype.Service
 @Service
 class CommentService(
     private val commentRepo: CommentRepository,       // 댓글 저장소
-    private val reviewRepo: ReviewRepository           // 리뷰 저장소
+    private val reviewRepo: ReviewRepository          // 리뷰 저장소
 ) {
     // 주어진 리뷰 ID와 사용자, 댓글 내용을 기반으로 댓글을 추가하는 함수
     fun addComment(reviewId: Long, content: String, author: User) {
-        val review = reviewRepo.findById(reviewId).orElseThrow() // 해당 리뷰가 없으면 예외 발생
-        val comment = Comment(content = content, review = review, author = author) // 댓글 생성
+        val review = reviewRepo.findById(reviewId)
+            .orElseThrow { IllegalArgumentException("리뷰를 찾을 수 없습니다. id=$reviewId") }
+
+        val comment = Comment(
+            content = content,
+            review = review,
+            author = author
+        )
+
         commentRepo.save(comment) // DB에 저장
     }
 }
