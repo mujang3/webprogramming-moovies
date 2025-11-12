@@ -1,0 +1,10 @@
+# Gradle/Java
+/build/
+/out/
+/target/
+*.jar
+*.war
+*.zip
+*.log
+.gradle/
+**/.DS_Store
